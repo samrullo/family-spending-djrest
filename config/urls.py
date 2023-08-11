@@ -21,6 +21,7 @@ from dj_rest_auth.registration.views import VerifyEmailView,ConfirmEmailView,Res
 from dj_rest_auth.views import LoginView,LogoutView
 
 from rest_framework.response import Response
+from family_spending.basic_views import base_view
 
 
 urlpatterns = [
@@ -35,4 +36,6 @@ urlpatterns = [
     path('api/v1/dj-rest-auth/registration/resend-email',ResendEmailVerificationView.as_view(),name="resend_email"),
     path('accounts/logout/', LogoutView.as_view(), name='account_logout'),
     path('accounts/login/', LoginView.as_view(), name='account_login'),
+    path('',base_view,name="base_view"),
+    
 ]

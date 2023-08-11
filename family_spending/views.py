@@ -1,4 +1,5 @@
 import logging
+import pdb
 from django.shortcuts import render
 from django.db import transaction
 from rest_framework import viewsets
@@ -247,18 +248,23 @@ class AssetAccountCreateAPIView(generics.CreateAPIView):
         except Exception as e:
             logging.debug(f"exception inside AssetAccountCreateAPIView {e}")
 
-class AssetAccountUpdateAPIView(generics.UpdateAPIView):
+class AssetAccountUpdateAPIView(generics.UpdateAPIView):    
     serializer_class = AssetAccountSerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = AssetAccount.objects.all()
 
     def perform_update(self,serializer):
-        with transaction.atomic():
-            asset_account_s=serializer.save()
-            asset_account_s.modified_by=self.request.user
-            asset_account_s.save()
-            update_asset_account(asset_account_s.asset_account_name,asset_account_s.business,asset_account_s.adate,self.request)
-            update_balance(asset_account_s.business,asset_account_s.adate,self.request)
+        logging.debug("AssetAccountUpdateAPIView.perform_udpate was called")
+        try:            
+            with transaction.atomic():
+                asset_account_s=serializer.save()
+                asset_account_s.modified_by=self.request.user
+                asset_account_s.save()
+                update_asset_account(asset_account_s.asset_account_name,asset_account_s.business,asset_account_s.adate,self.request)
+                update_balance(asset_account_s.business,asset_account_s.adate,self.request)
+        except Exception as e:            
+            logging.debug(e)
+            
 
 
 class AssetAccountDeleteAPIView(generics.DestroyAPIView):
