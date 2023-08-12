@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+  family-spending:
+    container_name: "family_spending"
+    build:
+      context: .
+      dockerfile: DockerfileLocal.dockerfile
+    volumes:
+     - .:/var/www/family_spending
+    ports:
+      - 8000:80
+    environment:
+      hostname: "localhost"
+      webappport: "8000"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOSTNAME: postgres
+      POSTGRES_DB: family_spending
+      POSTGRES_PORT: 5432
+    command: ["systemctl","start","family_spending"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - family_spending-networks
+  postgres:
+    container_name: "postgres"
+    build:
+      context: .
+      dockerfile: postgres.dockerfile
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: family_spending
+    volumes:
+      - ./postgres_data/db_dumps/:/var/dump
+      - ./postgres_data/data/:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d family_spending"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - family_spending-networks
+networks:
+  family_spending-networks:
+    driver: bridge
+
+    
