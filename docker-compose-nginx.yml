@@ -20,8 +20,7 @@ services:
       POSTGRES_PORT: 5432
     command: ["systemctl","start","family_spending"]
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres        
     networks:
       - family_spending-networks
   postgres:
