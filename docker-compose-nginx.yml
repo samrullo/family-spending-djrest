@@ -11,7 +11,7 @@ services:
     ports:
       - 80:80
     environment:
-      hostname: "23.100.89.58"
+      hostname: "samrullobusiness.shop"
       webappport: "80"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
