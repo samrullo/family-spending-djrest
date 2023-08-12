@@ -11,8 +11,8 @@ services:
     ports:
       - 80:80
     environment:
-      hostname: "localhost"
-      webappport: "8000"
+      hostname: "23.100.89.58"
+      webappport: "80"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOSTNAME: postgres
