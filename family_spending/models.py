@@ -19,6 +19,7 @@ class Business(models.Model):
 class AssetAccountName(models.Model):
     name = models.CharField(max_length=500)
     description = models.CharField(max_length=1000)
+    default_amount = models.IntegerField()
     is_enabled = models.BooleanField(default=True)
     business = models.ForeignKey(Business,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -50,6 +51,7 @@ class AssetAccount(models.Model):
 class SpendingName(models.Model):
     name = models.CharField(max_length=500)
     description = models.CharField(max_length=1000)
+    default_amount = models.IntegerField()
     is_enabled = models.BooleanField(default=True)
     business = models.ForeignKey(Business,on_delete=models.CASCADE)
     associated_asset_account_name = models.ForeignKey(AssetAccountName,on_delete=models.CASCADE)    
@@ -80,6 +82,7 @@ class Spending(models.Model):
 class IncomeName(models.Model):
     name = models.CharField(max_length=500)
     description = models.CharField(max_length=1000)
+    default_amount = models.IntegerField()
     is_enabled = models.BooleanField(default=True)
     business = models.ForeignKey(Business,on_delete=models.CASCADE)
     associated_asset_account_name = models.ForeignKey(AssetAccountName,on_delete=models.CASCADE)

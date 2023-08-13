@@ -42,7 +42,7 @@ class SpendingSerializer(BaseSerializer):
     
     class Meta:
         model = Spending
-        fields="__all__"    
+        fields="__all__"
     
     def get_spending_name_name(self,obj):
         return obj.spending_name.name
