@@ -28,9 +28,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-t1h-+rp2iakm47smo6kf4#=9%483wqzhb3r0nks9&d&w43f^^n'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["localhost","23.100.89.58","samrullobusiness.shop"]
+ALLOWED_HOSTS = ["localhost","23.100.89.58","samrullobusiness.shop","family-spending.local"]
 
 
 # Application definition
@@ -171,12 +171,14 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ORIGIN_WHITELIST = [    
-    'http://localhost:8000',
-    'http://localhost:3000',
+# CORS_ORIGIN_WHITELIST = [    
+#     'http://localhost:8000',
+#     'http://localhost:3000',
+#     'family_spending.local'
     
-]
+# ]
 
+CORS_ORIGIN_WHITELIST = ['http://family-spending.local']
 CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
