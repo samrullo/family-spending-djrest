@@ -44,7 +44,7 @@ server {
 
 I iniate a system service called ```family_spending.service``` which starts uwsgi server and listens on a socket
 
-You can see that the service executes uwsgi command and uses uwsgi.ini file for configs. This in turn starts uwsgi server that listens to nginx reverse proxied web requests, processes them as djnago would have dones and pass them back to nginx web server.
+You can see that the service executes uwsgi command and uses uwsgi.ini file for configs. This in turn starts uwsgi server that listens to nginx reverse proxied web requests, processes them as djnago would have done and pass them back to nginx web server.
 
 ```ini
 [Unit]
