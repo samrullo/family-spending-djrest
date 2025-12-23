@@ -4,22 +4,26 @@ from django.shortcuts import render
 from django.db import transaction
 from rest_framework import viewsets
 from rest_framework import permissions
-from rest_framework import generics,status
+from rest_framework import generics, status
 from rest_framework.response import Response
 
-from .models import Business,SpendingName,Spending,IncomeName,Income,AssetAccountName,AssetAccount,Balance
-from .serializers import BusinessSerializer,SpendingNameSerializer,SpendingSerializer,IncomeNameSerializer,IncomeSerializer,AssetAccountNameSerializer,AssetAccountSerializer,BalanceSerializer
-from .utils import update_balance,update_asset_account
+from .models import Business, SpendingName, Spending, IncomeName, Income, AssetAccountName, AssetAccount, Balance
+from .serializers import BusinessSerializer, SpendingNameSerializer, SpendingSerializer, IncomeNameSerializer, \
+    IncomeSerializer, AssetAccountNameSerializer, AssetAccountSerializer, BalanceSerializer
+from .utils import update_balance, update_asset_account
+
+logger = logging.getLogger(__name__)
 
 
 class ModifiedByMixin:
-    def perform_create(self,serializer):
-        serializer.save(modified_by=self.request.user)
-    
-    def perform_update(self,serializer):
+    def perform_create(self, serializer):
         serializer.save(modified_by=self.request.user)
 
-class BusinessViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+    def perform_update(self, serializer):
+        serializer.save(modified_by=self.request.user)
+
+
+class BusinessViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Business.objects.all()
     serializer_class = BusinessSerializer
@@ -30,7 +34,8 @@ class BusinessViewSet(ModifiedByMixin,viewsets.ModelViewSet):
             queryset = queryset.filter(owner=self.request.user)
         return queryset
 
-class SpendingNameViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class SpendingNameViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = SpendingName.objects.all()
     serializer_class = SpendingNameSerializer
@@ -41,14 +46,15 @@ class SpendingNameViewSet(ModifiedByMixin,viewsets.ModelViewSet):
             queryset = queryset.filter(business__owner=self.request.user)
         return queryset
 
-class SpendingViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class SpendingViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Spending.objects.all()
     serializer_class = SpendingSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.select_related('spending_name','business')
+        queryset = queryset.select_related('spending_name', 'business')
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
         return queryset
@@ -59,22 +65,22 @@ class SpendingViewSet(ModifiedByMixin,viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         update_view = SpendingUpdateAPIView.as_view()
-        return update_view(request._request,*args,**kwargs)
+        return update_view(request._request, *args, **kwargs)
 
 
-
-class SpendingAPICreateView(ModifiedByMixin,generics.CreateAPIView):
+class SpendingAPICreateView(ModifiedByMixin, generics.CreateAPIView):
     serializer_class = SpendingSerializer
-    permission_classes=(permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
 
-    def perform_create(self,serializer):
+    def perform_create(self, serializer):
         with transaction.atomic():
             spending = serializer.save()
             spending.modified_by = self.request.user
             spending.save()
             asset_account_name = spending.spending_name.associated_asset_account_name
-            update_asset_account(asset_account_name,spending.business,spending.adate,self.request)
-            update_balance(spending.business,spending.adate,self.request)
+            update_asset_account(asset_account_name, spending.business, spending.adate, self.request)
+            update_balance(spending.business, spending.adate, self.request)
+
 
 class SpendingUpdateAPIView(generics.UpdateAPIView):
     serializer_class = SpendingSerializer
@@ -87,8 +93,8 @@ class SpendingUpdateAPIView(generics.UpdateAPIView):
             spending.modified_by = self.request.user
             spending.save()
             asset_account_name = spending.spending_name.associated_asset_account_name
-            update_asset_account(asset_account_name,spending.business,spending.adate,self.request)
-            update_balance(spending.business,spending.adate,self.request)
+            update_asset_account(asset_account_name, spending.business, spending.adate, self.request)
+            update_balance(spending.business, spending.adate, self.request)
 
 
 class SpendingDeleteAPIView(generics.DestroyAPIView):
@@ -109,27 +115,29 @@ class SpendingDeleteAPIView(generics.DestroyAPIView):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-class IncomeNameViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class IncomeNameViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = IncomeName.objects.all()
     serializer_class = IncomeNameSerializer
 
     def get_queryset(self):
-        queryset= super().get_queryset()
+        queryset = super().get_queryset()
         queryset = queryset.select_related("business")
 
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
         return queryset
 
-class IncomeViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class IncomeViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Income.objects.all()
     serializer_class = IncomeSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.select_related("income_name","business")
+        queryset = queryset.select_related("income_name", "business")
 
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
@@ -138,23 +146,28 @@ class IncomeViewSet(ModifiedByMixin,viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         create_view = IncomeCreateAPIView.as_view()
         return create_view(request._request, *args, **kwargs)
-    
+
     def update(self, request, *args, **kwargs):
         update_view = IncomeUpdateAPIView.as_view()
-        return update_view(request._request,*args,**kwargs)
+        return update_view(request._request, *args, **kwargs)
 
-class IncomeCreateAPIView(ModifiedByMixin,generics.CreateAPIView):
+
+class IncomeCreateAPIView(ModifiedByMixin, generics.CreateAPIView):
     serializer_class = IncomeSerializer
-    permission_classes=(permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
 
-    def perform_create(self,serializer):
-        with transaction.atomic():
-            income = serializer.save()
-            income.modified_by = self.request.user
-            income.save()
-            asset_account_name=income.income_name.associated_asset_account_name            
-            update_asset_account(asset_account_name,income.business,income.adate,self.request)
-            update_balance(income.business,income.adate,self.request)
+    def perform_create(self, serializer):
+        try:
+            with transaction.atomic():
+                income = serializer.save()
+                income.modified_by = self.request.user
+                income.save()
+                asset_account_name = income.income_name.associated_asset_account_name
+                update_asset_account(asset_account_name, income.business, income.adate, self.request)
+                update_balance(income.business, income.adate, self.request)
+        except Exception as e:
+            logger.debug(f"Error while creating income {e}")
+
 
 class IncomeUpdateAPIView(generics.UpdateAPIView):
     serializer_class = IncomeSerializer
@@ -166,9 +179,10 @@ class IncomeUpdateAPIView(generics.UpdateAPIView):
             income = serializer.save()
             income.modified_by = self.request.user
             income.save()
-            asset_account_name=income.income_name.associated_asset_account_name
-            update_asset_account(asset_account_name,income.business,income.adate,self.request)
-            update_balance(income.business,income.adate,self.request)
+            asset_account_name = income.income_name.associated_asset_account_name
+            update_asset_account(asset_account_name, income.business, income.adate, self.request)
+            update_balance(income.business, income.adate, self.request)
+
 
 class IncomeDeleteAPIView(generics.DestroyAPIView):
     queryset = Income.objects.all()
@@ -189,31 +203,32 @@ class IncomeDeleteAPIView(generics.DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AssetAccountNameViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+class AssetAccountNameViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = AssetAccountName.objects.all()
     serializer_class = AssetAccountNameSerializer
 
     def get_queryset(self):
-        queryset =  super().get_queryset()
+        queryset = super().get_queryset()
         queryset = queryset.select_related("business")
 
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
         return queryset
 
-class AssetAccountViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class AssetAccountViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = AssetAccount.objects.all()
     serializer_class = AssetAccountSerializer
 
     def get_queryset(self):
-        queryset= super().get_queryset()
-        queryset = queryset.select_related("asset_account_name","business")
+        queryset = super().get_queryset()
+        queryset = queryset.select_related("asset_account_name", "business")
 
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
-        
+
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -222,10 +237,10 @@ class AssetAccountViewSet(ModifiedByMixin,viewsets.ModelViewSet):
         try:
             logging.debug(f"about to create new asset account with request {request._request}")
             create_view = AssetAccountCreateAPIView.as_view()
-            return create_view(request._request,*args,**kwargs)
+            return create_view(request._request, *args, **kwargs)
         except Exception as e:
             logging.debug(f"exception while creatingnew asset account {e}")
-    
+
     # def update(self, request, *args, **kwargs):
     #     update_view = AssetAccountUpdateAPIView.as_view()
     #     return update_view(request._request,*args,**kwargs)
@@ -240,31 +255,33 @@ class AssetAccountCreateAPIView(generics.CreateAPIView):
         try:
             with transaction.atomic():
                 logging.debug(f"about to create in AssetAccountCreateAPIView received serializer {serializer}")
-                asset_account_s=serializer.save()
-                asset_account_s.modified_by=self.request.user
+                asset_account_s = serializer.save()
+                asset_account_s.modified_by = self.request.user
                 asset_account_s.save()
-                update_asset_account(asset_account_s.asset_account_name,asset_account_s.business,asset_account_s.adate,self.request)
-                update_balance(asset_account_s.business,asset_account_s.adate,self.request)
+                update_asset_account(asset_account_s.asset_account_name, asset_account_s.business,
+                                     asset_account_s.adate, self.request)
+                update_balance(asset_account_s.business, asset_account_s.adate, self.request)
         except Exception as e:
             logging.debug(f"exception inside AssetAccountCreateAPIView {e}")
 
-class AssetAccountUpdateAPIView(generics.UpdateAPIView):    
+
+class AssetAccountUpdateAPIView(generics.UpdateAPIView):
     serializer_class = AssetAccountSerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = AssetAccount.objects.all()
 
-    def perform_update(self,serializer):
+    def perform_update(self, serializer):
         logging.debug("AssetAccountUpdateAPIView.perform_udpate was called")
-        try:            
+        try:
             with transaction.atomic():
-                asset_account_s=serializer.save()
-                asset_account_s.modified_by=self.request.user
+                asset_account_s = serializer.save()
+                asset_account_s.modified_by = self.request.user
                 asset_account_s.save()
-                update_asset_account(asset_account_s.asset_account_name,asset_account_s.business,asset_account_s.adate,self.request)
-                update_balance(asset_account_s.business,asset_account_s.adate,self.request)
-        except Exception as e:            
+                update_asset_account(asset_account_s.asset_account_name, asset_account_s.business,
+                                     asset_account_s.adate, self.request)
+                update_balance(asset_account_s.business, asset_account_s.adate, self.request)
+        except Exception as e:
             logging.debug(e)
-            
 
 
 class AssetAccountDeleteAPIView(generics.DestroyAPIView):
@@ -285,17 +302,16 @@ class AssetAccountDeleteAPIView(generics.DestroyAPIView):
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-class BalanceViewSet(ModifiedByMixin,viewsets.ModelViewSet):
+
+class BalanceViewSet(ModifiedByMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Balance.objects.all()
     serializer_class = BalanceSerializer
 
     def get_queryset(self):
-        queryset= super().get_queryset()
+        queryset = super().get_queryset()
         queryset = queryset.select_related("business")
         if not self.request.user.is_staff:
             queryset = queryset.filter(business__owner=self.request.user)
-        
+
         return queryset
-
-
