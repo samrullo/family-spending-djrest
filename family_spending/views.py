@@ -162,6 +162,7 @@ class IncomeCreateAPIView(ModifiedByMixin, generics.CreateAPIView):
                 income = serializer.save()
                 income.modified_by = self.request.user
                 income.save()
+                logger.debug(f"Saved income {income}")
                 asset_account_name = income.income_name.associated_asset_account_name
                 update_asset_account(asset_account_name, income.business, income.adate, self.request)
                 update_balance(income.business, income.adate, self.request)
