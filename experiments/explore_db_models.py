@@ -10,11 +10,11 @@ django.setup()
 
 import datetime
 from django.contrib.auth import get_user_model
-from family_spending.models import Spending,Income, SpendingName,IncomeName
+from family_spending.models import Spending, Income, SpendingName, IncomeName, Income
 
-spendings=Spending.objects.all()
+spendings = Spending.objects.all()
 print(f"There are {len(spendings):,} spending records in the database")
-adate=datetime.date(2025,12,31)
+adate = datetime.date(2025, 12, 31)
 dec_spending_rows = (
     Spending.objects
     .filter(adate=adate)
@@ -29,3 +29,10 @@ dec_spending_rows = (
         "spending_name__associated_asset_account_name__name",
     )
 )
+
+income_rows = (Income.objects
+               .filter(adate=adate)
+               .values("id",
+                       "amount",
+                       "income_name__name",
+                       "income_name__associated_asset_account_name__name"))
